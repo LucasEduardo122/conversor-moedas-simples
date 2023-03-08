@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Conversor de Moedas</title>
+  <link rel="stylesheet" href="./assets/css/styles.css" />
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@6.6.6/css/flag-icons.min.css" />
+</head>
+
+<body>
+  <main>
+    <section class="conversor">
+      <h2>Conversor de moedas</h2>
+      <div class="wrapper">
+        <div class="money-wrapper">
+          <input type="text" id="input-money-one" class="amount" value="0" />
+
+          <div class="dropdown">
+            <div class="selected" id="money-one">
+              <span class="fi fi-us fis"></span>
+              USD
+            </div>
+
+            <ul>
+              <li onclick="changeSelect(this)" id="BRL" data-value="790" data-type="money-one">
+                <span class="fi fi-br fis"></span>
+                BRL
+              </li>
+              <li onclick="changeSelect(this)" id="USD" data-value="220" data-type="money-one">
+                <span class="fi fi-us fis"></span>
+                USD
+              </li>
+              <li onclick="changeSelect(this)" id="EUR" data-value="978" data-type="money-one">
+                <span class="fi fi-eu fis"></span>
+                EUR
+              </li>
+              <li onclick="changeSelect(this)" id="GBP" data-value="540" data-type="money-one">
+                <span class="fi fi-gb fis"></span>
+                GBP
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="middle">
+          <img src="./assets/svg/arrows-exchange.svg" alt="trocar moeda" />
+        </div>
+        <div class="money-wrapper">
+          <input readonly type="text" disabled class="amount" id="input-money-two" value="0" />
+
+          <div class="dropdown">
+            <div class="selected" id="money-two">
+              <span class="fi fi-br fis"></span>
+              BRL
+            </div>
+
+            <ul>
+              <li onclick="changeSelect(this)" id="BRL" data-value="790" data-type="money-two">
+                <span class="fi fi-br fis"></span>
+                BRL
+              </li>
+              <li onclick="changeSelect(this)" id="USD" data-value="220" data-type="money-two">
+                <span class="fi fi-us fis"></span>
+                USD
+              </li>
+              <li onclick="changeSelect(this)" id="EUR" data-value="978" data-type="money-two">
+                <span class="fi fi-eu fis"></span>
+                EUR
+              </li>
+              <li onclick="changeSelect(this)" id="GBP" data-value="540" data-type="money-two">
+                <span class="fi fi-gb fis"></span>
+                GBP
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section>
+      <button onclick="converter()">
+        converter
+      </button>
+    </section>
+    <section class="cambio">
+      <h2>Taxa de câmbio</h2>
+      <div class="wrapper">
+        <div id="chart"></div>
+        <div class="chart-controls">
+          <button>1D</button>
+          <button>5D</button>
+          <button class="active">1M</button>
+          <button>1A</button>
+          <button>5A</button>
+          <button>Máx</button>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  <script src="./assets/js/script.js"></script>
+  <script src="https://code.jquery.com/jquery-2.2.3.js"></script>
+  <script src="./assets/js/xml2json.js"></script>
+  <script src="./assets/js/converter.js"></script>
+</body>
+
+</html>
