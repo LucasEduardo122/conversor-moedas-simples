@@ -1,139 +1,107 @@
-
 async function converter() {
+    const button = document.querySelector('.button-converter');
+    const originalText = button.innerHTML;
+
+    button.setAttribute('disabled', true);
+    button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Carregando...';
+
     const moneys = ['USD', 'BRL', 'EUR', 'GBP'];
     const typeMoney = [
-        {
-            'name': 'USD',
-            'value': '$'
-        },
+        { name: 'USD', value: '$' },
+        { name: 'BRL', value: 'R$' },
+        { name: 'EUR', value: '€' },
+        { name: 'GBP', value: '£' }
+    ];
 
-        {
-            'name': 'BRL',
-            'value': 'R$'
-        },
+    const moneyOne = document.querySelector('#money-one').textContent.trim('');
+    const moneyTwo = document.querySelector('#money-two').textContent.trim('');
+    const inputMoneyOne = document.querySelector('#input-money-one').value;
 
-        {
-            'name': 'EUR',
-            'value': '€'
-        },
-
-        {
-            'name': 'GBP',
-            'value': '£'
-        }
-    ]
-
-    const moneyOne = document.querySelector('#money-one').textContent.trim('')
-    const moneyTwo = document.querySelector('#money-two').textContent.trim('')
-
-    const inputMoneyOne = document.querySelector('#input-money-one').value
-
-    if (moneys.includes(moneyOne) == false || moneys.includes(moneyTwo) == false) {
-       return alert('Informe uma moeda válida!')
+    if (!moneys.includes(moneyOne) || !moneys.includes(moneyTwo)) {
+        alert('Informe uma moeda válida!');
+        resetButton();
+        return;
     }
 
-    if(moneyOne == moneyTwo) {
-        return alert('Informe moedas diferentes')
+    if (moneyOne === moneyTwo) {
+        alert('Informe moedas diferentes');
+        resetButton();
+        return;
     }
 
-    if(inputMoneyOne.length == 0 || inputMoneyOne == 0 || inputMoneyOne < 0) {
-        return alert('Informe um valor válido para conversão')
+    if (inputMoneyOne.length === 0 || inputMoneyOne == 0 || inputMoneyOne < 0) {
+        alert('Informe um valor válido para conversão');
+        resetButton();
+        return;
     }
 
-    const moneOneValueBcb = document.querySelector(`#${moneyOne}`).attributes['data-value']['value']
-    const moneTwoValueBcb = document.querySelector(`#${moneyTwo}`).attributes['data-value']['value']
+    const moneOneValueBcb = document.querySelector(`#${moneyOne}`).getAttribute('data-value');
+    const moneTwoValueBcb = document.querySelector(`#${moneyTwo}`).getAttribute('data-value');
 
-    const url = `https://www3.bcb.gov.br/bc_moeda/rest/converter/${inputMoneyOne}/1/${moneOneValueBcb}/${moneTwoValueBcb}/${new Date().toISOString().slice(0,10)}`
+    moment.locale();
+
+    const url = `https://www3.bcb.gov.br/bc_moeda/rest/converter/${inputMoneyOne}/1/${moneOneValueBcb}/${moneTwoValueBcb}/${moment().format('YYYY-MM-DD')}`;
     
     try {
-
         let x2js = new X2JS();
 
-        $.ajax({
+        await $.ajax({
             url,
             dataType: 'XML',
-            success: function(data) {
-                var xmlText = data; // XML
-                var jsonObj = x2js.xml2json(xmlText); // Convert XML to JSON
-                console.log(jsonObj, typeMoney.filter(value => value.name == moneyTwo));
-
-                let moeda = typeMoney.filter(value => value.name == moneyTwo);
-
-                document.querySelector('#input-money-two').value = moeda[0].value + String(Number(jsonObj['valor-convertido']).toFixed(2))
+            success: function (data) {
+                const jsonObj = x2js.xml2json(data);
+                const moeda = typeMoney.find(value => value.name === moneyTwo);
+                document.querySelector('#input-money-two').value = moeda.value + String(Number(jsonObj['valor-convertido']).toFixed(2));
+            },
+            error: function () {
+                alert('Erro ao buscar cotação atual');
             }
         });
-
-        
     } catch (error) {
-        return alert('Ocorreu um erro ao buscar os dados' + error)
+        alert('Ocorreu um erro ao buscar os dados: ' + error);
     }
-}
 
-function changeSelect(element) {
+    try {
+        const x2js2 = new X2JS();
+        const promises = [];
 
-    const elementSpan = [
-        {
-            'name': 'USD',
-            'value': 'fi',
-            'value2': 'fi-us',
-            'value3': 'fis'
-        },
+        for (let i = 0; i <= 6; i++) {
+            const dateStr = moment().subtract(i, 'days').format('YYYY-MM-DD');
+            const url2 = `https://www3.bcb.gov.br/bc_moeda/rest/converter/${inputMoneyOne}/1/${moneOneValueBcb}/${moneTwoValueBcb}/${dateStr}`;
 
-        {
-            'name': 'BRL',
-            'value': 'fi',
-            'value2': 'fi-br',
-            'value3': 'fis'
-        },
+            const promise = new Promise((resolve) => {
+                $.ajax({
+                    url: url2,
+                    dataType: 'XML',
+                    success: function (data) {
+                        const jsonObj = x2js2.xml2json(data);
+                        resolve({
+                            data: dateStr,
+                            cotacao: Number(jsonObj['valor-convertido']).toFixed(2)
+                        });
+                    },
+                    error: function () {
+                        console.warn(`Erro ao buscar: ${dateStr}`);
+                        resolve(null);
+                    }
+                });
+            });
 
-        {
-            'name': 'EUR',
-            'value': 'fi',
-            'value2': 'fi-eu',
-            'value3': 'fis'
-        },
-
-        {
-            'name': 'GBP',
-            'value': 'fi',
-            'value2': 'fi-gb',
-            'value3': 'fis'
+            promises.push(promise);
         }
-    ]
 
-    if(element.attributes['data-type']['value'] == 'money-one') {
-        let div = document.querySelector('div#money-one')
-        let span = document.querySelector('div#money-one > span')
+        const results = await Promise.all(promises);
+        const dados = results.filter(item => item !== null);
 
-        div.removeChild(span);
+        renderizarGrafico(dados);
+    } catch (e) {
+        console.error("Erro ao gerar gráfico:", e);
+    }
 
-        let spanCreate = elementSpan.filter(value => value.name == element.attributes['id']['value'])
+    resetButton();
 
-        let spanElementeCreate = document.createElement('span');
-        spanElementeCreate.classList.add(`${spanCreate[0].value}`)
-        spanElementeCreate.classList.add(`${spanCreate[0].value2}`)
-        spanElementeCreate.classList.add(`${spanCreate[0].value3}`)
-        spanElementeCreate.before('\00a0')
-
-        div.textContent = element.attributes['id']['value'];
-        div.appendChild(spanElementeCreate)
-
-    } else if(element.attributes['data-type']['value'] == 'money-two') {
-        let div = document.querySelector('div#money-two')
-        let span = document.querySelector('div#money-two > span')
-
-        div.removeChild(span);
-
-        let spanCreate = elementSpan.filter(value => value.name == element.attributes['id']['value'])
-
-        let spanElementeCreate = document.createElement('span');
-        spanElementeCreate.classList.add(`${spanCreate[0].value}`)
-        spanElementeCreate.classList.add(`${spanCreate[0].value2}`)
-        spanElementeCreate.classList.add(`${spanCreate[0].value3}`)
-        spanElementeCreate.before('\00a0')
-
-        div.textContent = element.attributes['id']['value'];
-        div.appendChild(spanElementeCreate)
-    }   
-
+    function resetButton() {
+        button.removeAttribute('disabled');
+        button.innerHTML = originalText;
+    }
 }
